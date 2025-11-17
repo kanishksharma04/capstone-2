@@ -15,7 +15,7 @@ const Dashboard = () => {
     <div className="dashboard">
       <nav className="navbar">
         <div className="navbar-content">
-          <h1 className="navbar-brand">Hike</h1>
+          <h1 className="navbar-brand">FlexVault</h1>
           <div className="navbar-user">
             <span>Welcome, {user?.name}</span>
             <button onClick={handleLogout} className="logout-btn">

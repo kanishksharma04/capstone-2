@@ -32,7 +32,7 @@ const Login = () => {
   return (
     <div className="auth-container">
       <div className="auth-form">
-        <h2 className="auth-title">Sign in to Hike</h2>
+        <h2 className="auth-title">Sign in to FlexVault</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <input
