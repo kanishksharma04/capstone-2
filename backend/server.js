@@ -29,11 +29,11 @@ const defaultDevOrigins = [
 
 const isDev = process.env.NODE_ENV !== 'production';
 
-const corsOrigin =
-  // In dev, be permissive to unblock local testing
-  isDev || !clientUrlEnv || clientUrlEnv === '*'
-    ? (origin, callback) => callback(null, true)
-    : [...parseOrigins(clientUrlEnv), ...defaultDevOrigins];
+const corsOrigin = isDev
+  ? (origin, callback) => callback(null, true)
+  : clientUrlEnv && clientUrlEnv !== '*'
+  ? [...parseOrigins(clientUrlEnv), ...defaultDevOrigins]
+  : (origin, callback) => callback(null, true);
 
 app.use(cors({
   origin: corsOrigin,
