@@ -42,15 +42,24 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   maxAge: 86400,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
+
+// Explicitly handle OPTIONS requests for all routes (additional safety)
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(204);
+});
 
 app.use(express.json());
 
-// Request logging middleware for debugging
+// Request logging middleware for debugging - log ALL requests
 app.use((req, res, next) => {
-  if (req.path.includes('/auth/login') || req.path.includes('/auth/signup')) {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  }
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
   next();
 });
 
@@ -75,7 +84,11 @@ app.get('/api/test', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running', timestamp: new Date().toISOString() });
 });
 
-// Routes
+// ============================================
+// AUTH ROUTES - Register these FIRST
+// ============================================
+
+// Signup route with /api prefix
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { name, email, password, role = 'customer' } = req.body;
@@ -185,19 +198,19 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
-// Add login route with /api prefix - MUST be before any catch-all routes
+// Login route with /api prefix - MUST be before any catch-all routes
 app.post('/api/auth/login', async (req, res) => {
   try {
-    console.log('=== LOGIN REQUEST ===');
+    console.log('=== LOGIN REQUEST RECEIVED ===');
     console.log('Method:', req.method);
     console.log('Path:', req.path);
-    console.log('Headers:', req.headers);
-    console.log('Body:', { email: req.body?.email });
+    console.log('Original URL:', req.originalUrl);
+    console.log('Body received:', { email: req.body?.email, hasPassword: !!req.body?.password });
     
     const { email, password } = req.body;
 
     if (!email || !password) {
-      console.log('Missing email or password');
+      console.log('Validation failed: Missing email or password');
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
@@ -219,15 +232,16 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    console.log('Login successful for user:', user.email);
-    res.json({
+    console.log('✓ Login successful for user:', user.email);
+    return res.json({
       message: 'Login successful',
       token,
       user: { id: user.id, name: user.name, email: user.email, role: user.role }
     });
   } catch (error) {
-    console.error('Login error:', error?.message || error);
-    res.status(500).json({ error: 'Server error', message: error?.message });
+    console.error('✗ Login error:', error?.message || error);
+    console.error('Error stack:', error?.stack);
+    return res.status(500).json({ error: 'Server error', message: error?.message });
   }
 });
 
@@ -428,10 +442,20 @@ app.delete('/api/items/:id', authenticateToken, async (req, res) => {
 
 // 404 handler for undefined routes - MUST be last before error handler
 app.use((req, res) => {
-  console.log(`404 - Route not found: ${req.method} ${req.path}`);
+  console.log(`❌ 404 - Route not found: ${req.method} ${req.path}`);
+  console.log(`   Original URL: ${req.originalUrl}`);
+  console.log(`   Query:`, req.query);
+  
+  // If it's a POST to /api/auth/login and we're getting 404, something is wrong
+  if (req.method === 'POST' && req.path === '/api/auth/login') {
+    console.error('⚠️  CRITICAL: POST /api/auth/login is hitting 404 handler!');
+    console.error('   This means the route is not registered properly!');
+  }
+  
   res.status(404).json({ 
     error: 'Route not found', 
-    path: req.path, 
+    path: req.path,
+    originalUrl: req.originalUrl,
     method: req.method,
     message: `Cannot ${req.method} ${req.path}`
   });
@@ -450,12 +474,15 @@ app.listen(PORT, () => {
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`CORS enabled for: ${process.env.CLIENT_URL || 'all origins'}`);
   console.log(`========================================`);
-  console.log('Registered routes:');
+  console.log('Registered AUTH routes:');
   console.log('  POST /api/auth/signup');
-  console.log('  POST /api/auth/login');
+  console.log('  POST /api/auth/login ✓');
   console.log('  GET  /api/auth/me');
   console.log('  POST /auth/signup');
   console.log('  POST /auth/login');
   console.log('  GET  /auth/me');
+  console.log('========================================');
+  console.log('✓ All routes registered successfully');
+  console.log('✓ Server ready to accept requests');
   console.log('========================================');
 });
