@@ -253,7 +253,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 // Items routes (Prisma)
-app.get('/api/items', authenticateToken, async (req, res) => {
+app.get('/api/items', async (req, res) => {
   try {
     const page = Number(req.query.page) > 0 ? Number(req.query.page) : 1;
     const limit = Number(req.query.limit) > 0 ? Number(req.query.limit) : 12;
@@ -290,7 +290,7 @@ app.get('/api/items', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/items/:id', authenticateToken, async (req, res) => {
+app.get('/api/items/:id', async (req, res) => {
   try {
     const item = await prisma.item.findUnique({ where: { id: req.params.id } });
     if (!item) return res.status(404).json({ error: 'Item not found' });
