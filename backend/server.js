@@ -70,7 +70,7 @@ const authenticateToken = (req, res, next) => {
 // Routes
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    const { name, email, password, role = 'user' } = req.body;
+    const { name, email, password, role = 'customer' } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -100,14 +100,14 @@ app.post('/api/auth/signup', async (req, res) => {
     });
   } catch (error) {
     console.error('API Signup error:', error?.message || error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: error?.message || 'Server error' });
   }
 });
 
 // Frontend-compatible signup route
 app.post('/auth/signup', async (req, res) => {
   try {
-    const { name, email, password, role = 'user' } = req.body;
+    const { name, email, password, role = 'customer' } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -137,12 +137,48 @@ app.post('/auth/signup', async (req, res) => {
     });
   } catch (error) {
     console.error('Signup error:', error?.message || error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: error?.message || 'Server error' });
   }
 });
 
 // Also add login route without /api prefix
 app.post('/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+    });
+  } catch (error) {
+    console.error('Login error:', error?.message || error);
+    res.status(500).json({ error: error?.message || 'Server error' });
+  }
+});
+
+// Add login route with /api prefix
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -187,6 +223,20 @@ app.get('/auth/me', authenticateToken, async (req, res) => {
     res.json(user);
   } catch (error) {
     console.error('Get user error:', error?.message || error);
+    res.status(500).json({ error: error?.message || 'Server error' });
+  }
+});
+
+// Add me route with /api prefix
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { id: true, name: true, email: true, role: true }
+    });
+    res.json(user);
+  } catch (error) {
+    console.error('Get user error:', error?.message || error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -201,4 +251,161 @@ app.get('/api', (req, res) => {
 });
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+// Items routes (Prisma)
+app.get('/api/items', authenticateToken, async (req, res) => {
+  try {
+    const page = Number(req.query.page) > 0 ? Number(req.query.page) : 1;
+    const limit = Number(req.query.limit) > 0 ? Number(req.query.limit) : 12;
+    const sortBy = req.query.sortBy || 'createdAt';
+    const order = req.query.order === 'asc' ? 'asc' : 'desc';
+    const where = {};
+    if (req.query.category) where.category = req.query.category;
+    if (req.query.priceMin || req.query.priceMax) {
+      where.price = {};
+      if (req.query.priceMin) where.price.gte = Number(req.query.priceMin);
+      if (req.query.priceMax) where.price.lte = Number(req.query.priceMax);
+    }
+    if (req.query.search) {
+      const q = req.query.search;
+      where.OR = [
+        { name: { contains: q, mode: 'insensitive' } },
+        { brand: { contains: q, mode: 'insensitive' } },
+        { tags: { hasSome: [q] } },
+      ];
+    }
+    const [items, total] = await Promise.all([
+      prisma.item.findMany({
+        where,
+        orderBy: { [sortBy]: order },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.item.count({ where }),
+    ]);
+    res.json({ items, page, limit, total, totalPages: Math.ceil(total / limit) });
+  } catch (error) {
+    console.error('Get items error:', error?.message || error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/items/:id', authenticateToken, async (req, res) => {
+  try {
+    const item = await prisma.item.findUnique({ where: { id: req.params.id } });
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+    res.json(item);
+  } catch (error) {
+    console.error('Get item error:', error?.message || error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/items/seller/my-items', authenticateToken, async (req, res) => {
+  try {
+    const page = Number(req.query.page) > 0 ? Number(req.query.page) : 1;
+    const limit = Number(req.query.limit) > 0 ? Number(req.query.limit) : 12;
+    const sortBy = req.query.sortBy || 'createdAt';
+    const order = req.query.order === 'asc' ? 'asc' : 'desc';
+    const where = { sellerId: req.user.userId };
+    if (req.query.category) where.category = req.query.category;
+    if (req.query.search) {
+      const q = req.query.search;
+      where.OR = [
+        { name: { contains: q, mode: 'insensitive' } },
+        { brand: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+    const [items, total] = await Promise.all([
+      prisma.item.findMany({
+        where,
+        orderBy: { [sortBy]: order },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.item.count({ where }),
+    ]);
+    res.json({ items, page, limit, total, totalPages: Math.ceil(total / limit) });
+  } catch (error) {
+    console.error('Get seller items error:', error?.message || error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/items', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'seller' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const imagesInput = req.body.images;
+    const tagsInput = req.body.tags;
+    const images = Array.isArray(imagesInput)
+      ? imagesInput.filter((s) => typeof s === 'string' && s.trim()).map((s) => s.trim())
+      : typeof imagesInput === 'string' && imagesInput.length
+      ? imagesInput.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+    const tags = Array.isArray(tagsInput)
+      ? tagsInput.filter((s) => typeof s === 'string' && s.trim()).map((s) => s.trim())
+      : typeof tagsInput === 'string' && tagsInput.length
+      ? tagsInput.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+    const price = Number(req.body.price);
+    const discount = Math.max(0, Math.min(100, Number(req.body.discount || 0)));
+    const stock = Math.max(0, Number(req.body.stock || 0));
+    const item = await prisma.item.create({
+      data: {
+        name: req.body.name,
+        brand: req.body.brand,
+        category: req.body.category,
+        description: req.body.description,
+        price,
+        discount,
+        stock,
+        images,
+        tags,
+        sellerId: req.user.userId,
+      },
+    });
+    res.status(201).json(item);
+  } catch (error) {
+    console.error('Create item error:', error?.message || error);
+    res.status(400).json({ error: 'Invalid item data' });
+  }
+});
+
+app.put('/api/items/:id', authenticateToken, async (req, res) => {
+  try {
+    const existing = await prisma.item.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Item not found' });
+    if (req.user.role === 'seller' && existing.sellerId !== req.user.userId) {
+      return res.status(403).json({ error: 'You can only update your own items' });
+    }
+    const data = { ...req.body };
+    if (typeof data.discount !== 'undefined') {
+      data.discount = Math.max(0, Math.min(100, Number(data.discount || 0)));
+    }
+    if (typeof data.stock !== 'undefined') {
+      data.stock = Math.max(0, Number(data.stock || 0));
+    }
+    const updated = await prisma.item.update({ where: { id: req.params.id }, data });
+    res.json(updated);
+  } catch (error) {
+    console.error('Update item error:', error?.message || error);
+    res.status(400).json({ error: 'Invalid item data' });
+  }
+});
+
+app.delete('/api/items/:id', authenticateToken, async (req, res) => {
+  try {
+    const existing = await prisma.item.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Item not found' });
+    if (req.user.role === 'seller' && existing.sellerId !== req.user.userId) {
+      return res.status(403).json({ error: 'You can only delete your own items' });
+    }
+    await prisma.item.delete({ where: { id: req.params.id } });
+    res.status(204).end();
+  } catch (error) {
+    console.error('Delete item error:', error?.message || error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });

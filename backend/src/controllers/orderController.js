@@ -4,6 +4,12 @@ const Order = require('../models/Order');
 
 const checkout = async (req, res) => {
   try {
+    const { address } = req.body;
+
+    if (!address || !address.street || !address.city || !address.state || !address.zipCode) {
+      return res.status(400).json({ error: 'Address is required with street, city, state, and zipCode' });
+    }
+
     const cartItems = await CartItem.find({ userId: req.user.userId }).populate('itemId');
 
     if (!cartItems.length) {
@@ -31,6 +37,13 @@ const checkout = async (req, res) => {
       items: orderItems,
       totalAmount,
       status: 'pending',
+      address: {
+        street: address.street,
+        city: address.city,
+        state: address.state,
+        zipCode: address.zipCode,
+        country: address.country || 'India',
+      },
     });
 
     await CartItem.deleteMany({ userId: req.user.userId });

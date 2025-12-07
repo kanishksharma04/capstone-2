@@ -20,11 +20,15 @@ const signup = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
+    // Validate role - allow 'customer', 'seller', or 'admin'
+    const validRoles = ['customer', 'seller', 'admin'];
+    const userRole = validRoles.includes(role) ? role : 'customer';
+
     const user = await User.create({
       name,
       email,
       passwordHash,
-      role: role === 'admin' ? 'admin' : 'user',
+      role: userRole,
     });
 
     const token = jwt.sign(

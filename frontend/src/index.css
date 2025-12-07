@@ -1,11 +1,26 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Novocaine';
+  src: url('/fonts/Novocaine.woff2') format('woff2'),
+       url('/fonts/Novocaine.woff') format('woff'),
+       url('/fonts/Novocaine.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
+  /* Color palette from flag */
+  --color-dark-blue-1: #0a1628; /* Very dark blue */
+  --color-dark-blue-2: #1a3a5c; /* Dark blue */
+  --color-bright-red: #dc2626; /* Bright red */
+  --color-coral-red: #f87171; /* Lighter red/coral */
 }
 
 body {
-  @apply bg-black text-zinc-100 antialiased;
+  @apply bg-[#0a1628] text-zinc-100 antialiased;
 }
 
 .animate-fade-in {
@@ -21,4 +36,32 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  width: 100%;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.marquee-content {
+  display: inline-flex;
+  animation: marquee 15s linear infinite;
+  will-change: transform;
+}
+
+.marquee-content:hover {
+  animation-play-state: paused;
 }

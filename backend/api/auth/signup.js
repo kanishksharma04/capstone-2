@@ -7,7 +7,7 @@ const prisma = global.prisma || new PrismaClient();
 if (!global.prisma) global.prisma = prisma;
 
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
 const CLIENT_URL = process.env.CLIENT_URL || '*';
 
 function setCors(req, res) {
@@ -27,11 +27,7 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!JWT_SECRET) {
-    return res.status(500).json({ error: 'Server misconfiguration: JWT_SECRET is missing' });
-  }
-
-  const { name, email, password, role = 'user' } = req.body || {};
+  const { name, email, password, role = 'customer' } = req.body || {};
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -43,8 +39,10 @@ module.exports = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    const validRoles = ['customer', 'seller', 'admin'];
+    const userRole = validRoles.includes(role) ? role : 'customer';
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role },
+      data: { name, email, password: hashedPassword, role: userRole },
     });
 
     const token = jwt.sign(

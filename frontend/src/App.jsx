@@ -11,6 +11,7 @@ import Cart from './pages/Cart';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import Profile from './pages/Profile';
+import SellerDashboard from './pages/SellerDashboard';
 import NotFound from './pages/NotFound';
 
 function AppContent() {
@@ -18,7 +19,7 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-black text-zinc-200 text-sm">
+      <div className="flex h-screen items-center justify-center bg-[#0a1628] text-zinc-200 text-sm">
         Loading your vault...
       </div>
     );
@@ -48,7 +49,23 @@ function AppContent() {
             )}
           />
           <Route
+            path="/seller/dashboard"
+            element={(
+              <ProtectedRoute>
+                <SellerDashboard />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
             path="/items"
+            element={(
+              <ProtectedRoute>
+                <Items />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/shop"
             element={(
               <ProtectedRoute>
                 <Items />

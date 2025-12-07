@@ -16,6 +16,11 @@ const itemSchema = new mongoose.Schema(
     images: [{ type: String }],
     tags: [{ type: String }],
     stock: { type: Number, default: 0, min: 0 },
+    sellerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+    },
   },
   { timestamps: true }
 );

@@ -7,7 +7,7 @@ const Signup = () => {
     name: '',
     email: '',
     password: '',
-    role: 'user',
+    role: 'customer',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,11 @@ const Signup = () => {
 
     try {
       await signup(formData.name, formData.email, formData.password, formData.role);
-      navigate('/dashboard');
+      if (formData.role === 'seller') {
+        navigate('/seller/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Signup failed');
     } finally {
@@ -92,6 +96,35 @@ const Signup = () => {
               value={formData.password}
               onChange={handleChange}
             />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="role" className="block text-xs text-zinc-400">
+              I want to
+            </label>
+            <div className="flex gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="role"
+                  value="customer"
+                  checked={formData.role === 'customer'}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-[#dc2626] border-[#1a3a5c] bg-[#0a1628] focus:ring-[#dc2626]"
+                />
+                <span className="text-xs text-zinc-300">Buy Products</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="role"
+                  value="seller"
+                  checked={formData.role === 'seller'}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-[#dc2626] border-[#1a3a5c] bg-[#0a1628] focus:ring-[#dc2626]"
+                />
+                <span className="text-xs text-zinc-300">Sell Products</span>
+              </label>
+            </div>
           </div>
 
           {error && (

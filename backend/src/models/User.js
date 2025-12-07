@@ -13,20 +13,19 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-    },
-    passwordHash: {
+  },
+  passwordHash: {
       type: String,
       required: true,
-    },
-    role: {
-      type: String,
-      enum: ['user', 'admin'],
-      default: 'user',
-    },
   },
-  { timestamps: true }
+  role: {
+      type: String,
+      enum: ['customer', 'seller', 'admin'],
+      default: 'customer',
+  },
+},
+{ timestamps: true }
 );
 
 module.exports = mongoose.model('User', userSchema);
-
 

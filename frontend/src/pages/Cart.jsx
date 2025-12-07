@@ -7,6 +7,14 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [checkingOut, setCheckingOut] = useState(false);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [address, setAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: 'India',
+  });
   const navigate = useNavigate();
 
   const loadCart = async () => {
@@ -46,10 +54,20 @@ const Cart = () => {
   };
 
   const handleCheckout = async () => {
+    if (!showAddressForm) {
+      setShowAddressForm(true);
+      return;
+    }
+
+    if (!address.street || !address.city || !address.state || !address.zipCode) {
+      setError('Please fill in all address fields');
+      return;
+    }
+
     setCheckingOut(true);
     setError('');
     try {
-      const res = await apiClient.post('/cart/checkout');
+      const res = await apiClient.post('/cart/checkout', { address });
       navigate(`/orders/${res.data._id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Checkout failed');
@@ -175,13 +193,57 @@ const Cart = () => {
               <span>Total</span>
               <span>₹{total.toLocaleString('en-IN')}</span>
             </div>
+
+            {showAddressForm && (
+              <div className="border-t border-zinc-800 pt-3 space-y-2">
+                <h4 className="text-xs font-semibold text-white">Delivery Address</h4>
+                <input
+                  type="text"
+                  placeholder="Street Address"
+                  value={address.street}
+                  onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    placeholder="City"
+                    value={address.city}
+                    onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="State"
+                    value={address.state}
+                    onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="ZIP Code"
+                  value={address.zipCode}
+                  onChange={(e) => setAddress({ ...address, zipCode: e.target.value })}
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAddressForm(false)}
+                  className="text-xs text-zinc-400 hover:text-zinc-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
             <button
               type="button"
               disabled={!items.length || checkingOut}
               onClick={handleCheckout}
-              className="mt-3 w-full rounded-md border border-rose-600 bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-3 w-full rounded-md border border-[#dc2626] bg-[#dc2626] px-4 py-2 text-sm font-medium text-white hover:bg-[#ef4444] transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {checkingOut ? 'Processing...' : 'Checkout'}
+              {checkingOut ? 'Processing...' : showAddressForm ? 'Place Order' : 'Proceed to Checkout'}
             </button>
             <p className="text-[11px] text-zinc-500">
               Flex Vault simulates checkout for demo—no real payments yet.

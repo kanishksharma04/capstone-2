@@ -74,13 +74,13 @@ const Items = () => {
             value={filters.search}
             onChange={handleFilterChange}
             placeholder="Search by name, brand, tags"
-            className="w-full md:w-52 rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            className="w-full md:w-52 rounded-md border border-[#1a3a5c] bg-[#0a1628]/50 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#dc2626]"
           />
           <select
             name="category"
             value={filters.category}
             onChange={handleFilterChange}
-            className="rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            className="rounded-md border border-[#1a3a5c] bg-[#0a1628]/50 px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-[#dc2626]"
           >
             {categories.map((c) => (
               <option key={c} value={c}>
@@ -92,7 +92,7 @@ const Items = () => {
             name="sortBy"
             value={filters.sortBy}
             onChange={handleFilterChange}
-            className="rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            className="rounded-md border border-[#1a3a5c] bg-[#0a1628]/50 px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-[#dc2626]"
           >
             <option value="createdAt">Newest</option>
             <option value="price">Price</option>
@@ -101,7 +101,7 @@ const Items = () => {
             name="order"
             value={filters.order}
             onChange={handleFilterChange}
-            className="rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            className="rounded-md border border-[#1a3a5c] bg-[#0a1628]/50 px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-[#dc2626]"
           >
             <option value="desc">High to low</option>
             <option value="asc">Low to high</option>
@@ -112,7 +112,7 @@ const Items = () => {
             value={filters.priceMin}
             onChange={handleFilterChange}
             placeholder="Min ₹"
-            className="w-24 rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            className="w-24 rounded-md border border-[#1a3a5c] bg-[#0a1628]/50 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#dc2626]"
           />
           <input
             type="number"
@@ -120,12 +120,12 @@ const Items = () => {
             value={filters.priceMax}
             onChange={handleFilterChange}
             placeholder="Max ₹"
-            className="w-24 rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            className="w-24 rounded-md border border-[#1a3a5c] bg-[#0a1628]/50 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#dc2626]"
           />
           <button
             type="button"
             onClick={handleApplyFilters}
-            className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-100 hover:bg-zinc-800 transition"
+            className="rounded-md border border-[#dc2626] bg-[#dc2626] px-3 py-2 text-xs font-medium text-white hover:bg-[#ef4444] transition"
           >
             Apply
           </button>
@@ -137,11 +137,11 @@ const Items = () => {
           Loading catalog...
         </div>
       ) : error ? (
-        <div className="rounded-md border border-rose-700 bg-rose-950 px-4 py-3 text-xs text-rose-200">
+        <div className="rounded-md border border-[#dc2626] bg-[#dc2626]/10 px-4 py-3 text-xs text-[#f87171]">
           {error}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-md border border-zinc-800 bg-zinc-950 px-4 py-10 text-center text-sm text-zinc-400">
+        <div className="rounded-md border border-[#1a3a5c] bg-[#1a3a5c]/20 px-4 py-10 text-center text-sm text-zinc-400">
           No items found. Try adjusting your filters.
         </div>
       ) : (
@@ -154,9 +154,9 @@ const Items = () => {
                 <Link
                   key={item._id}
                   to={`/items/${item._id}`}
-                  className="group rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-left transition hover:-translate-y-1 hover:border-zinc-500 hover:shadow-[0_18px_60px_rgba(0,0,0,0.9)]"
+                  className="group rounded-xl border border-[#1a3a5c] bg-[#0a1628]/50 p-3 text-left transition hover:-translate-y-1 hover:border-[#dc2626] hover:shadow-[0_18px_60px_rgba(220,38,38,0.2)] backdrop-blur-sm"
                 >
-                  <div className="aspect-square rounded-lg border border-zinc-800 bg-zinc-900 mb-3 overflow-hidden">
+                  <div className="aspect-square rounded-lg border border-[#1a3a5c] bg-[#1a3a5c]/30 mb-3 overflow-hidden">
                     {item.images?.[0] ? (
                       <img
                         src={item.images[0]}
@@ -170,7 +170,7 @@ const Items = () => {
                     )}
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#f87171]">
                       {item.brand}
                     </p>
                     <p className="text-sm font-medium text-zinc-100 line-clamp-2">
@@ -186,7 +186,7 @@ const Items = () => {
                         </span>
                       )}
                       {item.discount > 0 && (
-                        <span className="text-[11px] text-rose-400">
+                        <span className="text-[11px] text-[#f87171]">
                           -{item.discount}%
                         </span>
                       )}
@@ -205,7 +205,7 @@ const Items = () => {
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-md border border-zinc-800 px-3 py-1 disabled:opacity-40 hover:bg-zinc-900 transition"
+                className="rounded-md border border-[#1a3a5c] bg-[#1a3a5c]/30 px-3 py-1 disabled:opacity-40 hover:bg-[#1a3a5c] transition"
               >
                 Previous
               </button>
@@ -213,7 +213,7 @@ const Items = () => {
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="rounded-md border border-zinc-800 px-3 py-1 disabled:opacity-40 hover:bg-zinc-900 transition"
+                className="rounded-md border border-[#1a3a5c] bg-[#1a3a5c]/30 px-3 py-1 disabled:opacity-40 hover:bg-[#1a3a5c] transition"
               >
                 Next
               </button>
