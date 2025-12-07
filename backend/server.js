@@ -35,7 +35,7 @@ const corsOrigin = isDev
   ? [...parseOrigins(clientUrlEnv), ...defaultDevOrigins]
   : (origin, callback) => callback(null, true);
 
-// CORS configuration
+// CORS configuration - handles preflight automatically
 app.use(cors({
   origin: corsOrigin,
   credentials: true,
@@ -44,18 +44,15 @@ app.use(cors({
   maxAge: 86400,
 }));
 
-// Handle preflight requests - must be before other routes
-app.options('*', (req, res) => {
-  console.log('OPTIONS request:', req.path);
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Max-Age', '86400');
-  res.sendStatus(204);
-});
-
 app.use(express.json());
+
+// Request logging middleware for debugging
+app.use((req, res, next) => {
+  if (req.path.includes('/auth/login') || req.path.includes('/auth/signup')) {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  }
+  next();
+});
 
 // Auth middleware
 const authenticateToken = (req, res, next) => {
@@ -72,6 +69,11 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+// Test route to verify server is working
+app.get('/api/test', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running', timestamp: new Date().toISOString() });
+});
 
 // Routes
 app.post('/api/auth/signup', async (req, res) => {
@@ -183,24 +185,31 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
-// Add login route with /api prefix
+// Add login route with /api prefix - MUST be before any catch-all routes
 app.post('/api/auth/login', async (req, res) => {
   try {
-    console.log('Login request received:', { method: req.method, path: req.path, body: { email: req.body?.email } });
+    console.log('=== LOGIN REQUEST ===');
+    console.log('Method:', req.method);
+    console.log('Path:', req.path);
+    console.log('Headers:', req.headers);
+    console.log('Body:', { email: req.body?.email });
     
     const { email, password } = req.body;
 
     if (!email || !password) {
+      console.log('Missing email or password');
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      console.log('User not found:', email);
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
+      console.log('Invalid password for user:', email);
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
@@ -417,8 +426,9 @@ app.delete('/api/items/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// 404 handler for undefined routes
+// 404 handler for undefined routes - MUST be last before error handler
 app.use((req, res) => {
+  console.log(`404 - Route not found: ${req.method} ${req.path}`);
   res.status(404).json({ 
     error: 'Route not found', 
     path: req.path, 
@@ -435,7 +445,17 @@ app.use((err, req, res, next) => {
 
 // Start server - MUST be at the end after all routes
 app.listen(PORT, () => {
+  console.log(`========================================`);
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`CORS enabled for: ${process.env.CLIENT_URL || 'all origins'}`);
+  console.log(`========================================`);
+  console.log('Registered routes:');
+  console.log('  POST /api/auth/signup');
+  console.log('  POST /api/auth/login');
+  console.log('  GET  /api/auth/me');
+  console.log('  POST /auth/signup');
+  console.log('  POST /auth/login');
+  console.log('  GET  /auth/me');
+  console.log('========================================');
 });
