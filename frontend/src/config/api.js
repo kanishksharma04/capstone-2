@@ -14,12 +14,14 @@ const getApiUrl = () => {
     return url;
   }
   
-  // In production, if no explicit URL, try to construct from current origin
+  // In production, if no explicit URL is set, show error
+  // This prevents silent failures
   if (typeof window !== 'undefined') {
-    // If backend is on same domain, use relative path
-    // Otherwise, you need to set VITE_API_URL in your hosting environment
+    console.error('VITE_API_URL is not set! Please configure it in your hosting platform.');
+    console.error('Current origin:', window.location.origin);
+    // Try to use current origin as fallback, but log warning
     const url = `${window.location.origin}`;
-    console.log('Using fallback API URL:', url);
+    console.warn('Using fallback API URL (may not work):', url);
     return url;
   }
   
@@ -31,5 +33,7 @@ export const API_URL = getApiUrl();
 
 // Log API URL for debugging
 console.log('API_URL configured as:', API_URL);
+console.log('Environment:', import.meta.env.MODE);
+console.log('VITE_API_URL env var:', import.meta.env.VITE_API_URL);
 
 export default API_URL;

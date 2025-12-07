@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
+import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -20,7 +21,10 @@ function AppContent() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0a1628] text-zinc-200 text-sm">
-        Loading your vault...
+        <div className="text-center space-y-2">
+          <div className="animate-pulse">Loading your vault...</div>
+          <div className="text-xs text-zinc-500">If this takes too long, check the console for errors</div>
+        </div>
       </div>
     );
   }
@@ -113,9 +117,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
