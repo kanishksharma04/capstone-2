@@ -35,6 +35,7 @@ const corsOrigin = isDev
   ? [...parseOrigins(clientUrlEnv), ...defaultDevOrigins]
   : (origin, callback) => callback(null, true);
 
+// CORS configuration
 app.use(cors({
   origin: corsOrigin,
   credentials: true,
@@ -42,13 +43,18 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   maxAge: 86400,
 }));
-app.options(/.*/, cors({
-  origin: corsOrigin,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400,
-}));
+
+// Handle preflight requests - must be before other routes
+app.options('*', (req, res) => {
+  console.log('OPTIONS request:', req.path);
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400');
+  res.sendStatus(204);
+});
+
 app.use(express.json());
 
 // Auth middleware
@@ -180,6 +186,8 @@ app.post('/auth/login', async (req, res) => {
 // Add login route with /api prefix
 app.post('/api/auth/login', async (req, res) => {
   try {
+    console.log('Login request received:', { method: req.method, path: req.path, body: { email: req.body?.email } });
+    
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -202,6 +210,7 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    console.log('Login successful for user:', user.email);
     res.json({
       message: 'Login successful',
       token,
@@ -209,7 +218,7 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error?.message || error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', message: error?.message });
   }
 });
 
@@ -243,15 +252,13 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 
 
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', service: 'CareerLink API', env: process.env.NODE_ENV || 'development' });
+  res.json({ status: 'ok', service: 'FlexVault API', env: process.env.NODE_ENV || 'development' });
 });
 
 app.get('/api', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', message: 'FlexVault API is running' });
 });
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
 // Items routes (Prisma)
 app.get('/api/items', async (req, res) => {
   try {
@@ -408,4 +415,27 @@ app.delete('/api/items/:id', authenticateToken, async (req, res) => {
     console.error('Delete item error:', error?.message || error);
     res.status(500).json({ error: 'Server error' });
   }
+});
+
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: 'Route not found', 
+    path: req.path, 
+    method: req.method,
+    message: `Cannot ${req.method} ${req.path}`
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ error: 'Internal server error', message: err.message });
+});
+
+// Start server - MUST be at the end after all routes
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`CORS enabled for: ${process.env.CLIENT_URL || 'all origins'}`);
 });
