@@ -7,7 +7,7 @@ const prisma = global.prisma || new PrismaClient();
 if (!global.prisma) global.prisma = prisma;
 
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
-const JWT_SECRET = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
+const JWT_SECRET = process.env.JWT_SECRET;
 const CLIENT_URL = process.env.CLIENT_URL || '*';
 
 function setCors(req, res) {
@@ -25,6 +25,10 @@ module.exports = async (req, res) => {
   }
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!JWT_SECRET) {
+    return res.status(500).json({ error: 'Server misconfiguration: JWT_SECRET is missing' });
   }
 
   const { name, email, password, role = 'customer' } = req.body || {};

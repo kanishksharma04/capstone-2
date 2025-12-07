@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const prisma = global.prisma || new PrismaClient();
 if (!global.prisma) global.prisma = prisma;
 
-const JWT_SECRET = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
+const JWT_SECRET = process.env.JWT_SECRET;
 const CLIENT_URL = process.env.CLIENT_URL || '*';
 
 function setCors(req, res) {
@@ -25,7 +25,9 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  
+  if (!JWT_SECRET) {
+    return res.status(500).json({ error: 'Server misconfiguration: JWT_SECRET is missing' });
+  }
 
   const { email, password } = req.body || {};
   if (!email || !password) {

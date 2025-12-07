@@ -15,18 +15,6 @@ function setCors(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-function authenticateToken(req, res) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return null;
-
-  try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch (_) {
-    return null;
-  }
-}
-
 module.exports = async (req, res) => {
   setCors(req, res);
   if (req.method === 'OPTIONS') {
@@ -40,19 +28,24 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Server misconfiguration: JWT_SECRET is missing' });
   }
 
-  const payload = authenticateToken(req, res);
-  if (!payload) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) {
     return res.status(401).json({ error: 'Access token required' });
   }
 
   try {
+    const decoded = jwt.verify(token, JWT_SECRET);
     const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: { id: true, name: true, email: true, role: true }
+      where: { id: decoded.userId },
+      select: { id: true, name: true, email: true, role: true },
     });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
     return res.status(200).json(user);
   } catch (err) {
-    console.error('Me error:', err?.message || err);
-    return res.status(500).json({ error: 'Server error' });
+    return res.status(403).json({ error: 'Invalid or expired token' });
   }
 };
+
