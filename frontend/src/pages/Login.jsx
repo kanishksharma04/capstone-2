@@ -18,7 +18,7 @@ const Login = () => {
       await login(formData.email, formData.password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed');
+      setError(err.message || err.response?.data?.error || 'Login failed. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

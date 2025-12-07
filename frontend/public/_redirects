@@ -1,0 +1,4 @@
+# SPA fallback for client-side routing
+# This file is needed for platforms like Netlify
+/*    /index.html   200
+

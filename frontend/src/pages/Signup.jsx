@@ -27,7 +27,7 @@ const Signup = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Signup failed');
+      setError(err.message || err.response?.data?.error || 'Signup failed. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
