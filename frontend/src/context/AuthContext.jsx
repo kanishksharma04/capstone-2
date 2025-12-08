@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -28,12 +27,12 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const response = await apiClient.get('/api/auth/me');
+      // Use non-/api route so it works with both baseURL = 'http://localhost:3001'
+      // and baseURL = 'http://localhost:3001/api'
+      const response = await apiClient.get('/auth/me');
       setUser(response.data);
     } catch (error) {
-      // Log the error for debugging and clear auth state
       console.error('fetchUser error:', error);
-      // Only clear token if it's an auth error, not a network error
       if (error.response?.status === 401 || error.response?.status === 403) {
         localStorage.removeItem('token');
       }
@@ -44,38 +43,49 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await apiClient.post('/api/auth/login', { email, password });
+      // Same idea: hit /auth/login instead of /api/auth/login
+      const response = await apiClient.post('/auth/login', { email, password });
       const { token, user } = response.data;
-      
+
       if (token && user) {
         localStorage.setItem('token', token);
         setUser(user);
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
-      // Re-throw with a more user-friendly message
-      const errorMessage = error.response?.data?.error || error.message || 'Login failed. Please check your credentials.';
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        'Login failed. Please check your credentials.';
       throw new Error(errorMessage);
     }
   };
 
   const signup = async (name, email, password, role) => {
     try {
-      const response = await apiClient.post('/api/auth/signup', { name, email, password, role });
+      // Same here: /auth/signup instead of /api/auth/signup
+      const response = await apiClient.post('/auth/signup', {
+        name,
+        email,
+        password,
+        role,
+      });
       const { token, user } = response.data;
-      
+
       if (token && user) {
         localStorage.setItem('token', token);
         setUser(user);
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('Signup error:', error);
-      // Re-throw with a more user-friendly message
-      const errorMessage = error.response?.data?.error || error.message || 'Signup failed. Please try again.';
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        'Signup failed. Please try again.';
       throw new Error(errorMessage);
     }
   };
@@ -90,12 +100,8 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
-    loading
+    loading,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
