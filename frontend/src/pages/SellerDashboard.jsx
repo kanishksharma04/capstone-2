@@ -58,7 +58,7 @@ const SellerDashboard = () => {
       };
 
       if (editingItem) {
-        await apiClient.put(`/items/${editingItem._id}`, itemData);
+        await apiClient.put(`/items/${editingItem.id}`, itemData);
       } else {
         await apiClient.post('/items', itemData);
       }
@@ -286,7 +286,7 @@ const SellerDashboard = () => {
               const effectivePrice = item.price * (1 - (item.discount || 0) / 100);
               return (
                 <div
-                  key={item._id}
+                  key={item.id}
                   className="rounded-xl border border-[#1a3a5c] bg-[#0a1628]/50 p-4 backdrop-blur-sm"
                 >
                   <div className="aspect-square rounded-lg border border-[#1a3a5c] bg-[#1a3a5c]/30 mb-3 overflow-hidden">
@@ -332,7 +332,7 @@ const SellerDashboard = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDelete(item._id)}
+                        onClick={() => handleDelete(item.id)}
                         className="flex-1 rounded-md border border-[#dc2626] bg-[#dc2626]/20 px-3 py-1.5 text-xs font-medium text-[#f87171] hover:bg-[#dc2626]/30 transition"
                       >
                         Delete
@@ -373,4 +373,3 @@ const SellerDashboard = () => {
 };
 
 export default SellerDashboard;
-

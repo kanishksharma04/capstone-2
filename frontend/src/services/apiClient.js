@@ -51,10 +51,11 @@ apiClient.interceptors.response.use(
         data: error.response.data
       });
     }
-    // Handle 401 errors (unauthorized)
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem('token');
-      // Don't redirect here to avoid infinite loops
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
     // Handle 405 errors specifically
     if (error.response?.status === 405) {
@@ -64,5 +65,4 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 

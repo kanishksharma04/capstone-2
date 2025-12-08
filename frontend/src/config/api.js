@@ -15,7 +15,7 @@ const getApiUrl = () => {
   }
   // In development (localhost), default to backend on port 3001
   if (import.meta.env.DEV) {
-    const url = 'http://localhost:3001';
+    const url = 'http://localhost:3001/api';
     console.log('Using development API URL:', url);
     return url;
   }

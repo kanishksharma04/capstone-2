@@ -99,8 +99,8 @@ const Home = () => {
                 item.price * (1 - (item.discount || 0) / 100);
               return (
                 <Link
-                  key={item._id}
-                  to={`/items/${item._id}`}
+                  key={item.id}
+                  to={`/items/${item.id}`}
                   className="group rounded-xl border border-[#1a3a5c] bg-[#0a1628]/50 p-3 text-left transition hover:-translate-y-1 hover:border-[#dc2626] hover:shadow-[0_18px_60px_rgba(220,38,38,0.2)] backdrop-blur-sm"
                 >
                   <div className="aspect-square rounded-lg border border-[#1a3a5c] bg-[#1a3a5c]/30 mb-3 overflow-hidden">
@@ -161,5 +161,4 @@ const Home = () => {
 };
 
 export default Home;
-
 

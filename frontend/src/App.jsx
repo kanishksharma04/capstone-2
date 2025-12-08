@@ -5,7 +5,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
+import CustomerDashboard from './pages/CustomerDashboard';
 import Items from './pages/Items';
 import ItemDetail from './pages/ItemDetail';
 import Cart from './pages/Cart';
@@ -40,7 +40,7 @@ function AppContent() {
             path="/dashboard"
             element={(
               <ProtectedRoute>
-                <Dashboard />
+                <CustomerDashboard />
               </ProtectedRoute>
             )}
           />
@@ -78,6 +78,14 @@ function AppContent() {
           />
           <Route
             path="/items/:id"
+            element={(
+              <ProtectedRoute>
+                <ItemDetail />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/product/:id"
             element={(
               <ProtectedRoute>
                 <ItemDetail />

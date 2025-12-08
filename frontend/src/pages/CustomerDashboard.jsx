@@ -4,7 +4,7 @@ import { apiClient } from '../services/apiClient';
 
 const categories = ['all', 'sneakers', 'streetwear', 'electronics', 'accessories'];
 
-const Items = () => {
+const CustomerDashboard = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,7 +25,7 @@ const Items = () => {
     try {
       const params = {
         page,
-        limit: 12,
+        limit: 6,
         sortBy: filters.sortBy,
         order: filters.order,
       };
@@ -63,10 +63,8 @@ const Items = () => {
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">Catalog</h2>
-          <p className="text-xs text-zinc-400">
-            Browse India-curated hype, filtered your way.
-          </p>
+          <h2 className="text-xl font-semibold text-white">Customer Dashboard</h2>
+          <p className="text-xs text-zinc-400">Discover and manage your hype picks.</p>
         </div>
         <div className="flex flex-wrap gap-3 text-xs">
           <input
@@ -133,62 +131,39 @@ const Items = () => {
       </div>
 
       {loading ? (
-        <div className="flex h-40 items-center justify-center text-zinc-400 text-sm">
-          Loading catalog...
-        </div>
+        <div className="flex h-40 items-center justify-center text-zinc-400 text-sm">Loading catalog...</div>
       ) : error ? (
-        <div className="rounded-md border border-[#dc2626] bg-[#dc2626]/10 px-4 py-3 text-xs text-[#f87171]">
-          {error}
-        </div>
+        <div className="rounded-md border border-[#dc2626] bg-[#dc2626]/10 px-4 py-3 text-xs text-[#f87171]">{error}</div>
       ) : items.length === 0 ? (
-        <div className="rounded-md border border-[#1a3a5c] bg-[#1a3a5c]/20 px-4 py-10 text-center text-sm text-zinc-400">
-          No items found. Try adjusting your filters.
-        </div>
+        <div className="rounded-md border border-[#1a3a5c] bg-[#1a3a5c]/20 px-4 py-10 text-center text-sm text-zinc-400">No items found. Try adjusting your filters.</div>
       ) : (
         <>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => {
-              const effectivePrice =
-                item.price * (1 - (item.discount || 0) / 100);
+              const effectivePrice = item.price * (1 - (item.discount || 0) / 100);
               return (
                 <Link
                   key={item.id}
-                  to={`/items/${item.id}`}
+                  to={`/product/${item.id}`}
                   className="group rounded-xl border border-[#1a3a5c] bg-[#0a1628]/50 p-3 text-left transition hover:-translate-y-1 hover:border-[#dc2626] hover:shadow-[0_18px_60px_rgba(220,38,38,0.2)] backdrop-blur-sm"
                 >
                   <div className="aspect-square rounded-lg border border-[#1a3a5c] bg-[#1a3a5c]/30 mb-3 overflow-hidden">
                     {item.images?.[0] ? (
-                      <img
-                        src={item.images[0]}
-                        alt={item.name}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
+                      <img src={item.images[0]} alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-[11px] text-zinc-500">
-                        Image coming soon
-                      </div>
+                      <div className="flex h-full w-full items-center justify-center text-[11px] text-zinc-500">Image coming soon</div>
                     )}
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#f87171]">
-                      {item.brand}
-                    </p>
-                    <p className="text-sm font-medium text-zinc-100 line-clamp-2">
-                      {item.name}
-                    </p>
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#f87171]">{item.brand}</p>
+                    <p className="text-sm font-medium text-zinc-100 line-clamp-2">{item.name}</p>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="font-semibold text-white">
-                        ₹{effectivePrice.toLocaleString('en-IN')}
-                      </span>
+                      <span className="font-semibold text-white">₹{effectivePrice.toLocaleString('en-IN')}</span>
                       {item.discount > 0 && (
-                        <span className="text-[11px] text-zinc-500 line-through">
-                          ₹{item.price.toLocaleString('en-IN')}
-                        </span>
+                        <span className="text-[11px] text-zinc-500 line-through">₹{item.price.toLocaleString('en-IN')}</span>
                       )}
                       {item.discount > 0 && (
-                        <span className="text-[11px] text-[#f87171]">
-                          -{item.discount}%
-                        </span>
+                        <span className="text-[11px] text-[#f87171]">-{item.discount}%</span>
                       )}
                     </div>
                   </div>
@@ -197,9 +172,7 @@ const Items = () => {
             })}
           </div>
           <div className="mt-6 flex items-center justify-between text-xs text-zinc-400">
-            <span>
-              Page {page} of {totalPages}
-            </span>
+            <span>Page {page} of {totalPages}</span>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -225,5 +198,4 @@ const Items = () => {
   );
 };
 
-export default Items;
-
+export default CustomerDashboard;

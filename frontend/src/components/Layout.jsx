@@ -51,14 +51,6 @@ export const Layout = ({ children }) => {
                 ) : (
                   <>
                     <NavLink
-                      to="/dashboard"
-                      className={({ isActive }) =>
-                        `${navLinkClasses} ${isActive ? 'bg-[#1a3a5c] text-white' : 'text-zinc-300'}`
-                      }
-                    >
-                      Dashboard
-                    </NavLink>
-                    <NavLink
                       to="/orders"
                       className={({ isActive }) =>
                         `${navLinkClasses} ${isActive ? 'bg-[#1a3a5c] text-white' : 'text-zinc-300'}`
@@ -133,5 +125,4 @@ export const Layout = ({ children }) => {
     </div>
   );
 };
-
 

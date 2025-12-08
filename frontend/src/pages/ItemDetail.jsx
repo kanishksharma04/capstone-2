@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../services/apiClient';
 
 const ItemDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -37,6 +38,19 @@ const ItemDetail = () => {
     } finally {
       setAdding(false);
       setTimeout(() => setFeedback(''), 2500);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    setAdding(true);
+    setFeedback('');
+    try {
+      await apiClient.post('/cart', { itemId: id, quantity: 1 });
+      navigate('/cart');
+    } catch (err) {
+      setFeedback(err.response?.data?.error || 'Failed to start checkout');
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -143,6 +157,14 @@ const ItemDetail = () => {
             >
               {item.stock <= 0 ? 'Out of stock' : adding ? 'Adding...' : 'Add to cart'}
             </button>
+            <button
+              type="button"
+              onClick={handleBuyNow}
+              disabled={adding || item.stock <= 0}
+              className="ml-3 inline-flex items-center justify-center rounded-md border border-[#1a3a5c] bg-[#1a3a5c] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1a3a5c]/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {item.stock <= 0 ? 'Out of stock' : 'Buy now'}
+            </button>
             {feedback && (
               <p className="mt-2 text-xs text-zinc-300">{feedback}</p>
             )}
@@ -154,5 +176,4 @@ const ItemDetail = () => {
 };
 
 export default ItemDetail;
-
 
