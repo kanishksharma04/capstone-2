@@ -320,6 +320,145 @@ app.get('/api/items', async (req, res) => {
   }
 });
 
+// Cart routes (Prisma)
+app.post('/api/cart', authenticateToken, async (req, res) => {
+  try {
+    const { itemId, quantity = 1 } = req.body;
+    if (!itemId) return res.status(400).json({ error: 'itemId is required' });
+    const item = await prisma.item.findUnique({ where: { id: itemId } });
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+    const existing = await prisma.cartItem.findUnique({
+      where: { userId_itemId: { userId: req.user.userId, itemId } },
+    });
+    if (existing) {
+      const updated = await prisma.cartItem.update({
+        where: { id: existing.id },
+        data: { quantity: existing.quantity + (Number(quantity) || 1) },
+      });
+      return res.json(updated);
+    }
+    const cartItem = await prisma.cartItem.create({
+      data: { userId: req.user.userId, itemId, quantity: Number(quantity) || 1 },
+    });
+    return res.status(201).json(cartItem);
+  } catch (error) {
+    console.error('Add to cart error:', error?.message || error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/cart', authenticateToken, async (req, res) => {
+  try {
+    const items = await prisma.cartItem.findMany({
+      where: { userId: req.user.userId },
+      include: { item: true },
+    });
+    const mapped = items.map((ci) => ({ id: ci.id, quantity: ci.quantity, item: ci.item }));
+    return res.json({ items: mapped });
+  } catch (error) {
+    console.error('Get cart error:', error?.message || error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/cart/:id', authenticateToken, async (req, res) => {
+  try {
+    const { quantity } = req.body;
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ error: 'Quantity must be at least 1' });
+    }
+    const cartItem = await prisma.cartItem.update({
+      where: { id: req.params.id },
+      data: { quantity },
+    });
+    return res.json(cartItem);
+  } catch (error) {
+    console.error('Update cart error:', error?.message || error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.delete('/api/cart/:id', authenticateToken, async (req, res) => {
+  try {
+    await prisma.cartItem.delete({ where: { id: req.params.id } });
+    return res.status(204).end();
+  } catch (error) {
+    console.error('Remove cart error:', error?.message || error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/cart/checkout', authenticateToken, async (req, res) => {
+  try {
+    const { address } = req.body;
+    if (!address || !address.street || !address.city || !address.state || !address.zipCode) {
+      return res.status(400).json({ error: 'Address is required with street, city, state, and zipCode' });
+    }
+    const cartItems = await prisma.cartItem.findMany({
+      where: { userId: req.user.userId },
+      include: { item: true },
+    });
+    if (!cartItems.length) {
+      return res.status(400).json({ error: 'Cart is empty' });
+    }
+    const orderItemsData = cartItems.map((ci) => ({
+      itemId: ci.item.id,
+      nameSnapshot: ci.item.name,
+      priceSnapshot: ci.item.price * (1 - (ci.item.discount || 0) / 100),
+      quantity: ci.quantity,
+      imageSnapshot: Array.isArray(ci.item.images) && ci.item.images.length ? ci.item.images[0] : null,
+    }));
+    const totalAmount = orderItemsData.reduce((sum, oi) => sum + oi.priceSnapshot * oi.quantity, 0);
+    const order = await prisma.order.create({
+      data: {
+        userId: req.user.userId,
+        totalAmount,
+        status: 'pending',
+        addressStreet: address.street,
+        addressCity: address.city,
+        addressState: address.state,
+        addressZipCode: address.zipCode,
+        addressCountry: address.country || 'India',
+        items: { create: orderItemsData },
+      },
+      include: { items: true },
+    });
+    await prisma.cartItem.deleteMany({ where: { userId: req.user.userId } });
+    return res.status(201).json(order);
+  } catch (error) {
+    console.error('Checkout error:', error?.message || error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Orders routes (Prisma)
+app.get('/api/orders', authenticateToken, async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: { userId: req.user.userId },
+      orderBy: { createdAt: 'desc' },
+      include: { items: true },
+    });
+    return res.json({ orders });
+  } catch (error) {
+    console.error('Get orders error:', error?.message || error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/orders/:id', authenticateToken, async (req, res) => {
+  try {
+    const order = await prisma.order.findFirst({
+      where: { id: req.params.id, userId: req.user.userId },
+      include: { items: true },
+    });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    return res.json(order);
+  } catch (error) {
+    console.error('Get order error:', error?.message || error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
 app.get('/api/items/:id', async (req, res) => {
   try {
     const item = await prisma.item.findUnique({ where: { id: req.params.id } });
