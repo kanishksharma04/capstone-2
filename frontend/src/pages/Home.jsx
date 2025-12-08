@@ -13,7 +13,7 @@ const Home = () => {
       setError('');
       try {
         const res = await apiClient.get('/items', { 
-          params: { page: 1, limit: 12, sortBy: 'createdAt', order: 'desc' }
+          params: { page: 1, limit: 6, sortBy: 'createdAt', order: 'desc' }
         });
         setItems(res.data.items || []);
       } catch (err) {
@@ -161,4 +161,3 @@ const Home = () => {
 };
 
 export default Home;
-

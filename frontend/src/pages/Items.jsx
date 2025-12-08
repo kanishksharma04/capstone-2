@@ -25,7 +25,7 @@ const Items = () => {
     try {
       const params = {
         page,
-        limit: 12,
+        limit: 6,
         sortBy: filters.sortBy,
         order: filters.order,
       };
@@ -226,4 +226,3 @@ const Items = () => {
 };
 
 export default Items;
-

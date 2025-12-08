@@ -50,7 +50,7 @@ const OrderDetail = () => {
         <div>
           <h2 className="text-xl font-semibold text-white">Order details</h2>
           <p className="text-xs text-zinc-400">
-            #{order._id.slice(-10)}
+            #{order.id.slice(-10)}
           </p>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-[11px] capitalize text-zinc-200">
@@ -109,5 +109,4 @@ const OrderDetail = () => {
 };
 
 export default OrderDetail;
-
 

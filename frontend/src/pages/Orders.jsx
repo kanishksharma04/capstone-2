@@ -46,8 +46,8 @@ const Orders = () => {
         <div className="space-y-3">
           {orders.map((order) => (
             <Link
-              key={order._id}
-              to={`/orders/${order._id}`}
+              key={order.id}
+              to={`/orders/${order.id}`}
               className="block rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-sm hover:border-zinc-500 transition"
             >
               <div className="flex items-center justify-between gap-4">
@@ -55,7 +55,7 @@ const Orders = () => {
                   <p className="text-xs text-zinc-500">
                     Order •{' '}
                     <span className="font-mono text-[11px]">
-                      #{order._id.slice(-8)}
+                      #{order.id.slice(-8)}
                     </span>
                   </p>
                   <p className="text-xs text-zinc-400">
@@ -98,5 +98,4 @@ const Orders = () => {
 };
 
 export default Orders;
-
 

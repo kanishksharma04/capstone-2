@@ -28,7 +28,7 @@ const SellerDashboard = () => {
     setError('');
     try {
       const res = await apiClient.get('/items/seller/my-items', {
-        params: { page, limit: 12 },
+        params: { page, limit: 6 },
       });
       setItems(res.data.items || []);
       setTotalPages(res.data.totalPages || 1);
