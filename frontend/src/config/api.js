@@ -7,6 +7,12 @@ const getApiUrl = () => {
     return url;
   }
   
+  // If hosted on Vercel and no explicit URL, use Render API
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('vercel.app')) {
+    const url = 'https://capstone-2-o6vo.onrender.com/api';
+    console.log('Using Vercel-hosted fallback API URL:', url);
+    return url;
+  }
   // In development (localhost), default to backend on port 3001
   if (import.meta.env.DEV) {
     const url = 'http://localhost:3001';
@@ -20,7 +26,7 @@ const getApiUrl = () => {
     console.error('VITE_API_URL is not set! Please configure it in your hosting platform.');
     console.error('Current origin:', window.location.origin);
     // Try to use current origin as fallback, but log warning
-    const url = `${window.location.origin}`;
+    const url = `${window.location.origin}/api`;
     console.warn('Using fallback API URL (may not work):', url);
     return url;
   }
